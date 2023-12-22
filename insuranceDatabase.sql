@@ -11,7 +11,7 @@ address varchar(20) not null
 create table CAR (
 reg_no varchar(15) primary key,
 model varchar(10) not null,
-cyear varchar(10) not null
+cyear int not null
 );
 
 create table ACCIDENT (
@@ -36,4 +36,23 @@ foreign key (driver_id) references PERSON(driver_id) on delete cascade,
 foreign key (reg_no) references CAR(reg_no) on delete cascade,
 foreign key (report_number) references ACCIDENT(report_number) on delete cascade
 );
+
+insert into PERSON(driver_id, name, address)
+values
+('D001', 'Smith', 'Kuvempunagar'),
+('D002', 'Alex', 'Vijaynagar'),
+('D003', 'John', 'R K Nagar'),
+('D004', 'Kumar', 'K P Layout'),
+('D005', 'Patil', 'J P Nagar');
+
+insert into CAR (reg_no, model, cyear)
+values
+('KA09FG2435', 'Swift', 2009),
+('KA12TT5667', 'Verna', 2015),
+('KA22RN3548', 'Tiago', 2021),
+('KA27LL9472', 'Mazda', 2022),
+('KA05QS4629', 'Kia', 2020);
+
+
+
 
