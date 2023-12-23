@@ -14,10 +14,11 @@ model varchar(10) not null,
 cyear int not null
 );
 
+
 create table ACCIDENT (
 report_number int primary key,
 accident_date date not null,
-location varchar(10) not null
+location varchar(20) not null
 );
 
 create table OWNS (
@@ -49,9 +50,73 @@ insert into CAR (reg_no, model, cyear)
 values
 ('KA09FG2435', 'Swift', 2009),
 ('KA12TT5667', 'Verna', 2015),
-('KA22RN3548', 'Tiago', 2021),
-('KA27LL9472', 'Mazda', 2022),
-('KA05QS4629', 'Kia', 2020);
+('KA22RN3548', 'Mazda', 2021),
+('KA27LL9472', 'Kushaq', 2022),
+('KA09MA1234', 'Kia', 2020);
+
+
+
+insert into ACCIDENT (report_number, accident_date, location)
+values
+(101, '2022-01-12', 'R G layout'),
+(102, '2022-02-12', 'Vijaynagar'),
+(103, '2021-03-12', 'Kuvempnagara'),
+(104, '2023-04-12', 'J P Nagar'),
+(105, '2021-05-12', 'Jaynagar'),
+(106, '2021-07-12', 'R T Nagar');
+
+insert into OWNS (driver_id , reg_no)
+values
+('D001', 'KA09FG2435'),
+('D002', 'KA12TT5667'),
+('D001', 'KA22RN3548'),
+('D003', 'KA27LL9472'),
+('D005', 'KA09MA1234');
+
+insert into PARTICIPATED (driver_id, reg_no, report_number, damage_amount)
+values
+('D001', 'KA09FG2435', 101, 26000),
+('D002', 'KA12TT5667', 102, 36000),
+('D001', 'KA22RN3548', 103, 46000),
+('D003', 'KA27LL9472', 104, 56000),
+('D005', 'KA09MA1234', 106, 66000);
+
+-- Find the total number of people who owned cars that were involved in accidents in 2021
+select count(driver_id) as total
+from PARTICIPATED join
+ACCIDENT on
+PARTICIPATED.report_number = ACCIDENT.report_number
+where accident_date like '2021%';
+
+-- Find the number of accidents in which the cars belonging to “Smith” were involved
+
+
+
+
+-- Add a new accident to the database; assume any value for the atributes
+insert into ACCIDENT (report_number, accident_date, location)
+values
+(108, '2020-09-16', 'Bogadi');
+
+
+-- Update the damage amount for the car with license number "KA09MA1234" in the accident with an appropriate report number
+update PARTICIPATED
+set damage_amount = 70000
+where reg_no = 'KA09MA1234'
+and report_number = 106;
+
+
+-- A view that shows models and year of cars that are involved in accident
+create view Display_models_years
+as select model, cyear 
+from PARTICIPATED join CAR
+on PARTICIPATED.reg_no = CAR.reg_no;
+
+select * from Display_models_years;
+
+
+
+
 
 
 
