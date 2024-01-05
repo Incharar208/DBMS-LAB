@@ -92,28 +92,34 @@ values
 (104, 84, '2023-05-05'),
 (105, 83, '2023-06-12');
 
-
---List the Order# and Ship_date for all orders shipped from Warehouse# "83". 
+-- List the Order# and Ship_date for all orders shipped from Warehouse# "W2"
 select order_id , ship_date from Shipment where warehouse = 83;
 
---List the Warehouse information from which the Customer named "Kumar" was supplied his orders. Produce a listing of Order#, Warehouse#
+--  List the Warehouse information from which the Customer named "Kumar" was supplied his orders. Produce a listing of Order#, Warehouse#.
 select Shipment.order_id , Shipment.warehouse , Customer.cname
 from Shipment , Orders, Customer 
 where Shipment.order_id = Orders.order_id AND
 Orders.cust = Customer.cust AND
 Customer.cname LIKE '%Kumar%';
 
---Delete all orders for customer named "Kumar"
-delete from Orders where cust = 
-(select cust from Customers where cname like "%Kumar%");
+--  Produce a listing: Cname, #ofOrders, Avg_Order_Amt, where the middle column is the total number of orders by the customer and the last column is the average order amount for that customer. (Use aggregate functions)
+select Customer.cname, COUNT(order_id) as NumberOfOrders, AVG(orderAmt) as OrderAmount
+from Customer join 
+Orders on Customer.cust = Orders.cust
+group by Customer.cust;
 
---Find the item with the maximum unit price
+-- Delete all orders for customer named "Kumar"
+delete from Orders where cust = 
+(select cust from Customer where cname like "%Kumar%");
+
+-- Find the item with the maximum unit price
 select items , MAX(unitprice) as maximum from Item
 group by items 
 order by maximum desc
 limit 1;
 
--- Create a view to display orderID and shipment date of all orders shipped from a warehouse 83
+
+-- Create a view to display orderID and shipment date of all orders shipped from a warehouse 
 create view order_shipment
 as select 
 order_id , ship_date 
@@ -123,9 +129,20 @@ where warehouse = 83;
 select * from order_shipment;
 
 
+-- A trigger that updates order_amout based on quantity and unitprice of order_item
 
+DELIMITER //
 
+CREATE TRIGGER my_amt
+AFTER INSERT ON OrderItems
+FOR EACH ROW
+BEGIN
+    UPDATE Orders
+    SET orderAmt = (SELECT unitprice FROM Item WHERE items = NEW.item) * NEW.qty
+    WHERE order_id = NEW.order_id;
+END;
+//
 
-
+DELIMITER ;
 
 
