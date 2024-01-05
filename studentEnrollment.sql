@@ -35,7 +35,7 @@ create table BOOK_ADOPTION (
 courseId int not null,
 sem int not null,
 bookISBN int not null,
-foreign key (courseID) references COURSE(courseId) on delete cascade,
+foreign key (courseId) references COURSE(courseId) on delete cascade,
 foreign key (bookISBN) references TEXT(bookISBN) on delete cascade
 );
 
@@ -71,7 +71,7 @@ values
 (421613, "Market Research", "Publications3", "Author4"),
 (153716, "Power Plantations", "Publications4", "Author5"); 
 
-insert into BOOK_ADOPTION(courseID, sem, bookISBN)
+insert into BOOK_ADOPTION(courseId, sem, bookISBN)
 values
 (101, 5, 258341),
 (104, 6, 421613),
@@ -79,4 +79,64 @@ values
 (102, 6, 561685),
 (103, 5, 631685);
 
+-- Demonstrate how you add a new text book to the database and make this book be adopted by some department
+insert into TEXT 
+values 
+(364712, "Handbook for CSE", "Publications5", "Author6");
 
+-- adoption of the above book
+insert into BOOK_ADOPTION 
+values
+(105, 5, 364712);
+
+-- Produce a list of text books (include Course #, Book-ISBN, Book-title) in the alphabetical order for courses offered by the ‘CS’ department that use more than two books
+select COURSE.courseId, TEXT.bookTitle, TEXT.bookISBN
+from BOOK_ADOPTION join TEXT on
+BOOK_ADOPTION.bookISBN = TEXT.bookISBN
+join COURSE on
+COURSE.courseId = BOOK_ADOPTION.courseId
+where COURSE.dept = 'CSE'
+GROUP BY COURSE.courseId, TEXT.bookTitle, TEXT.bookISBN
+having COUNT(*) > 2
+order by TEXT.bookTitle;
+
+-- List any department that has all its adopted books published by a specific publisher
+
+
+
+-- List the students who have scored maximum marks in ‘DBMS’ course
+select STUDENT.name 
+from STUDENT join
+ENROLL on STUDENT.regno = ENROLL.regno
+join COURSE on ENROLL.courseId = COURSE.courseId
+where COURSE.cname = "DBMS"
+order by ENROLL.marks desc
+limit 1;
+
+
+-- Create a view to display all the courses opted by a student along with marks obtained
+create view Display_courses
+as select COURSE.cname, ENROLL.marks
+from COURSE join
+ENROLL on COURSE.courseId = ENROLL.courseId
+where ENROLL.regno = '01JS123';
+
+select * from Display_courses;
+
+-- Create a trigger that prevents a student from enrolling in a course if the marks prerequisite is less than 40
+delimiter //
+create trigger Check_Marks 
+before insert on ENROLL
+for each row
+begin
+    if (NEW.marks < 40 )
+    then
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = "Marks not enough bro!";
+    end if;
+    end;//
+delimiter ;
+
+insert into ENROLL
+values
+("01JS456", 103, 6, 39);
