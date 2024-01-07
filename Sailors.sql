@@ -56,44 +56,42 @@ values
 select BOAT.color from BOAT
 join RSERVERS on BOAT.bid = RSERVERS.bid
 join SAILORS on SAILORS.sid = RSERVERS.sid
-where sname = 'Albert'; 
+where SAILORS.sname = 'Albert'; 
 
 -- Find all sailor id’s of sailors who have a rating of at least 8 or reserved boat 103
 select RSERVERS.sid from RSERVERS
 join SAILORS on RSERVERS.sid = SAILORS.sid
-where rating >= 8.0 or bid = 103;
+where SAILORS.rating >= 8.0 or RSERVERS.bid = 103;
 
 -- Find the names of sailors who have not reserved a boat whose name contains the string “storm”. Order the names in ascending order
-select sname from SAILORS
+select SAILORS.sname from SAILORS
 where sid not in (select distinct sid from RSERVERS)
 and sname like "%storm%"
 order by sname;
 
 -- Find the names of sailors who have reserved all boats
-SELECT SAILORS.sname
-FROM SAILORS 
-JOIN RSERVERS  ON SAILORS.sid = RSERVERS.sid
-GROUP BY SAILORS.sid
-HAVING COUNT(DISTINCT RSERVERS.bid) = (SELECT COUNT(*) FROM BOAT);
-
+select SAILORS.sname from
+SAILORS join
+RSERVERS on SAILORS.sid = RSERVERS.sid
+group by SAILORS.sid
+having COUNT(distinct RSERVERS.sid) = (select COUNT(*) from BOAT);
 
 -- Find the name and age of the oldest sailor
-select sname, age from SAILORS
+select SAILORS.sname, SAILORS.age from SAILORS
 order by age desc
 limit 1;
 
 -- For each boat which was reserved by at least 2 sailors with age >= 40, find the boat id and the average age of such sailors
-SELECT RSERVERS.bid, AVG(SAILORS.age) AS average_age
-FROM RSERVERS 
-JOIN SAILORS  ON RSERVERS.sid = SAILORS.sid
-WHERE SAILORS.age >= 40
-GROUP BY RSERVERS.bid
-HAVING COUNT(DISTINCT RSERVERS.sid) >= 2;
-
+select RSERVERS.bid, AVG(SAILORS.age) as averageAge
+from RSERVERS join SAILORS on
+RSERVERS.sid = SAILORS.sid
+where SAILORS.age >= 40
+group by RSERVERS.bid
+having COUNT(distinct RSERVERS.sid) >= 2;
 
 -- Create a view that shows the names and colours of all the boats that have been reserved by a sailor with a specific rating 9.0
 create view Display_Colours_Names
-as select bname , color
+as select BOAT.bname , BOAT.color
 from BOAT join RSERVERS ON
 BOAT.bid = RSERVERS.bid
 join SAILORS on SAILORS.sid = RSERVERS.sid
@@ -102,17 +100,16 @@ where SAILORS.rating like 6.6;
 select * from Display_Colours_Names;
 
 -- A trigger that prevents boats from being deleted If they have active reservations
-DELIMITER //
-CREATE TRIGGER Prevent_Deletion
-BEFORE DELETE ON BOAT
-FOR EACH ROW
-BEGIN
-    IF (OLD.bid IN (SELECT DISTINCT bid FROM RSERVERS)) THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Boat is reserved and hence cannot be deleted';
-    END IF;
-END//
-DELIMITER ;
-
+delimiter //
+create trigger preventDeletion
+before delete on BOAT
+for each row
+begin
+	if (old.bid in (select distinct bid from RSERVERS)) then
+		signal sqlstate '45000' set message_text = 'Boat under reservation hence cannot be deleted';
+	end if;
+end;//
+delimiter ;
+        
 delete from BOAT where bid = 101;
-
-
+-- gives an error as there is an active reservation
