@@ -70,8 +70,6 @@ UPDATE Employee SET dno = 002 WHERE ssn = 103;
 UPDATE Employee SET dno = 003 WHERE ssn = 101;
 UPDATE Employee SET dno = 005 WHERE ssn = 105;
 
-SELECT * FROM Employee;
-
 INSERT INTO DLocation VALUES
 (001, "Bombay"),
 (002, "Bengaluru"),
@@ -90,14 +88,10 @@ INSERT INTO Works_On VALUES
 (102, 1001, 12);
 
 -- Make a list of all project numbers for projects that involve an employee whose last name is ‘Scott’, either as a worker or as a manager of the department that controls the project
-select Project.Pno, Project.pname from
-Project join Department on
-Project.dno = Department.dno
-join 
-Employee on 
-Department.dno = Employee.dno
-where ename like '%Scott';
-
+select Project.pno, Project.pname
+from Project join Employee on
+Project.dno = Employee.dno
+where Employee.ename like '%Scott';
 
 -- Show the resulting salaries if every employee working on the ‘IoT’ project is given a 10 percent raise
 select Employee.ename, Employee.salary as "Old Salary" , Employee.salary * 1.1 as "New Salary"
@@ -111,8 +105,7 @@ select SUM(Employee.salary) as SUMSALARY, MAX(Employee.salary) as MAXSALARY, MIN
 from Employee join
 Department on
 Employee.dno = Department.dno
-where Department.dname = 'Accounts'
-group by Department.dname;
+where Department.dname = 'Accounts';
 
 -- Retrieve the name of each employee who works on all the projects controlled by department number 5
 select Employee.ename from
@@ -140,16 +133,15 @@ select * from DisplayRequired;
 
 -- Create a trigger that prevents a project from being deleted if it is currently being worked by any employee.
 delimiter //
-create trigger deletePrevention
+create trigger preventProjectDeletion
 before delete on Project
 for each row
 begin
-    if(old.pno in (select pno from Works_on where Works_on.pno = old.pno))
-    then
-    signal sqlstate '45000' set
-    message_text = "Project cannot be deleted";
+	if (old.pno in (select pno from Works_on where Works_on.pno = old.pno)) then
+    signal sqlstate '45000' set message_text = "Project is being worked on";
     end if;
-end; //
+end;//
 delimiter ;
     
 delete from Project where pno = "1001";
+-- gives an error
