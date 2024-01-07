@@ -3,7 +3,7 @@ CREATE DATABASE COMPANY;
 USE COMPANY;
 
 CREATE TABLE Employee (
-	ssn INT PRIMARY KEY,
+    ssn INT PRIMARY KEY,
     ename VARCHAR(30) NOT NULL,
     address VARCHAR(45) NOT NULL,
     sex VARCHAR(7) NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE Employee (
 );
 
 CREATE TABLE Department (
-	dno INT PRIMARY KEY,
+    dno INT PRIMARY KEY,
     dname VARCHAR(15) NOT NULL,
     mgrSSN INT,
     mgrStartDate DATE,
@@ -30,7 +30,7 @@ CREATE TABLE DLocation (
 );
 
 CREATE TABLE Project (
-	pno INT PRIMARY KEY,
+    pno INT PRIMARY KEY,
     pname VARCHAR(45) NOT NULL,
     plocation VARCHAR(30) NOT NULL,
     dno INT NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE Project (
 );
 
 CREATE TABLE Works_on (
-	ssn INT,
+    ssn INT,
     pno INT,
     hours INT,
     FOREIGN KEY (ssn) REFERENCES Employee (ssn) ON DELETE CASCADE,
