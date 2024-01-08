@@ -1,3 +1,3 @@
 # DBMS-LAB
 
-All the programs of the DBMS lab are being recorded.
+All SQL Queries for the given databases are updated.
