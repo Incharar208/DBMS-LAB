@@ -13,34 +13,34 @@ create table Orders (
  odate date ,
  orderAmt int ,
  cust int,
- foreign key (cust) references Customer(cust) on delete set null 
+ foreign key (cust) references Customer(cust) on delete cascade
 );
 
 create table Item (
- items int primary key,
+ itemID int primary key,
  unitprice int 
 );
 
 create table OrderItems (
  order_id int ,
- item int ,
+ itemID int ,
  qty int,
- foreign key (order_id) references Orders(order_id) on delete set null ,
- foreign key (item) references Item(items) on delete set null 
+ foreign key (order_id) references Orders(order_id) on delete cascade ,
+ foreign key (itemID) references Item(itemID) on delete cascade
 );
 
 create table Warehouse (
- warehouse int primary key,
+ warehouseID int primary key,
  city varchar(50) 
 );
 
 
 create table Shipment (
 order_id int ,
-warehouse int ,
+warehouseID int ,
 ship_date date ,
-foreign key (warehouse) references Warehouse(warehouse) on delete set null,
-foreign key (order_id) references Orders(order_id) on delete set null
+foreign key (warehouseID) references Warehouse(warehouseID) on delete cascade,
+foreign key (order_id) references Orders(order_id) on delete cascade
 );
 
 insert into Customer (cust, cname, city)
@@ -52,7 +52,7 @@ values
 (5,"Priya Singh","Delhi");
 
 
-insert into Item (items, unitprice)
+insert into Item (itemID, unitprice)
 values
 (51,45),
 (52,67),
@@ -60,7 +60,7 @@ values
 (54,12),
 (55,150);
 
-insert into Warehouse (warehouse, city)
+insert into Warehouse (warehouseID, city)
 values
 (81,"Mandya"),
 (82,"Shivamogga"),
@@ -76,7 +76,7 @@ values
 (104, '2023-04-05', 9000, 4),
 (105, '2023-05-12', 6000, 5);
 
-insert into OrderItems (order_id,  item, qty)
+insert into OrderItems (order_id,  itemID, qty)
 values
 (101, 52, 6),
 (102, 53, 3),
@@ -84,7 +84,7 @@ values
 (104, 55, 12),
 (105, 54, 15);
 
-insert into Shipment (order_id , warehouse, ship_date)
+insert into Shipment (order_id , warehouseID, ship_date)
 values
 (101, 81, '2023-02-15'),
 (102, 83, '2023-03-20'),
@@ -93,56 +93,57 @@ values
 (105, 83, '2023-06-12');
 
 -- List the Order# and Ship_date for all orders shipped from Warehouse# "W2"
-select order_id , ship_date from Shipment where warehouse = 83;
+select Shipment.order_id , Shipment.ship_date from Shipment where warehouseID = 83;
 
 --  List the Warehouse information from which the Customer named "Kumar" was supplied his orders. Produce a listing of Order#, Warehouse#.
-select Shipment.order_id , Shipment.warehouse , Customer.cname
-from Shipment , Orders, Customer 
-where Shipment.order_id = Orders.order_id AND
-Orders.cust = Customer.cust AND
-Customer.cname LIKE '%Kumar%';
+select Shipment.order_id, Shipment.warehouseId
+from Shipment join Orders on
+Shipment.order_id = Orders.order_id
+join Customer on
+Orders.cust = Customer.cust
+where Customer.cname like "%Kumar%";
 
 --  Produce a listing: Cname, #ofOrders, Avg_Order_Amt, where the middle column is the total number of orders by the customer and the last column is the average order amount for that customer. (Use aggregate functions)
-select Customer.cname, COUNT(order_id) as NumberOfOrders, AVG(orderAmt) as OrderAmount
+select Customer.cname, COUNT(Orders.order_id) as NumberOfOrders, AVG(orderAmt) as OrderAmount
 from Customer join 
 Orders on Customer.cust = Orders.cust
-group by Customer.cust;
+group by Customer.cname;
 
 -- Delete all orders for customer named "Kumar"
 delete from Orders where cust = 
 (select cust from Customer where cname like "%Kumar%");
 
 -- Find the item with the maximum unit price
-select items , MAX(unitprice) as maximum from Item
-group by items 
-order by maximum desc
+select Item.itemID from Item
+order by unitprice desc
 limit 1;
-
 
 -- Create a view to display orderID and shipment date of all orders shipped from a warehouse 
 create view order_shipment
-as select 
-order_id , ship_date 
+as select Shipment.order_id , Shipment.ship_date 
 from Shipment
-where warehouse = 83;
+where warehouseID = 83;
 
 select * from order_shipment;
 
-
 -- A trigger that updates order_amout based on quantity and unitprice of order_item
+delimiter //
+create trigger updateAmount
+after insert on OrderItems
+for each row
+begin
+	update Orders
+    set orderAmt = (select unitprice from Item where itemId = new.itemID) * new.qty
+    where order_id = new.order_id;
+end;//
+delimiter ;
 
-DELIMITER //
+insert into Orders 
+values
+(115, "2020-12-23",1200 , 1);
 
-CREATE TRIGGER my_amt
-AFTER INSERT ON OrderItems
-FOR EACH ROW
-BEGIN
-    UPDATE Orders
-    SET orderAmt = (SELECT unitprice FROM Item WHERE items = NEW.item) * NEW.qty
-    WHERE order_id = NEW.order_id;
-END;
-//
+insert into OrderItems 
+values
+(115,51,9);
 
-DELIMITER ;
-
-
+select * from Orders;
