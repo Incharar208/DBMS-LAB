@@ -101,8 +101,10 @@ having COUNT(*) > 2
 order by TEXT.bookTitle;
 
 -- List any department that has all its adopted books published by a specific publisher
-
-
+select COURSE.dept
+from COURSE , BOOK_ADOPTION , TEXT 
+where BOOK_ADOPTION.bookISBN = TEXT.bookISBN AND BOOK_ADOPTION.courseId = COURSE.courseId and
+TEXT.publisher = 'Publisher1';
 
 -- List the students who have scored maximum marks in ‘DBMS’ course
 select STUDENT.name 
@@ -112,7 +114,6 @@ join COURSE on ENROLL.courseId = COURSE.courseId
 where COURSE.cname = "DBMS"
 order by ENROLL.marks desc
 limit 1;
-
 
 -- Create a view to display all the courses opted by a student along with marks obtained
 create view Display_courses
@@ -125,18 +126,16 @@ select * from Display_courses;
 
 -- Create a trigger that prevents a student from enrolling in a course if the marks prerequisite is less than 40
 delimiter //
-create trigger Check_Marks 
+create trigger preventEnrollment
 before insert on ENROLL
 for each row
 begin
-    if (NEW.marks < 40 )
-    then
-    SIGNAL SQLSTATE '45000'
-    SET MESSAGE_TEXT = "Marks not enough bro!";
-    end if;
-    end;//
+	if (new.marks < 40) then
+		signal sqlstate '45000' set message_text = "Marks requirement is not satisfied";
+	end if;
+end;//
 delimiter ;
 
 insert into ENROLL
 values
-("01JS456", 103, 6, 39);
+("01JS456", 103, 6, 39)
