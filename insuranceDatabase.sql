@@ -1,141 +1,139 @@
-create database StudentEnrollment;
+create database Insurance;
 
-use StudentEnrollment;
+use Insurance;
 
-create table STUDENT (
-regno varchar(15) primary key,
+create table PERSON (
+driver_id varchar(10) primary key,
 name varchar(20) not null,
-major varchar(20) not null,
-bdate date not null
+address varchar(20) not null 
+);
+ 
+create table CAR (
+reg_no varchar(15) primary key,
+model varchar(10) not null,
+cyear int not null
 );
 
-create table COURSE (
-courseId int primary key,
-cname varchar(50) not null,
-dept varchar(50) not null
+create table ACCIDENT (
+report_number int primary key,
+accident_date date not null,
+location varchar(20) not null
 );
 
-create table ENROLL (
-regno varchar(15) not null,
-courseId int not null,
-sem int not null,
-marks int not null,
-foreign key (regno) references STUDENT(regno) on delete cascade,
-foreign key (courseId) references COURSE(courseId) on delete cascade
+create table OWNS (
+driver_id varchar(10) not null,
+reg_no varchar(15) not null,
+foreign key (driver_id) references PERSON(driver_id) on delete cascade,
+foreign key (reg_no) references CAR(reg_no) on delete cascade
 );
 
-create table TEXT (
-bookISBN int primary key,
-bookTitle varchar(30) not null,
-publisher varchar(50) not null,
-author varchar(50) not null
+create table PARTICIPATED (
+driver_id varchar(10) not null,
+reg_no varchar(15) not null,
+report_number int not null,
+damage_amount int not null,
+foreign key (driver_id) references PERSON(driver_id) on delete cascade,
+foreign key (reg_no) references CAR(reg_no) on delete cascade,
+foreign key (report_number) references ACCIDENT(report_number) on delete cascade
 );
 
-create table BOOK_ADOPTION (
-courseId int not null,
-sem int not null,
-bookISBN int not null,
-foreign key (courseId) references COURSE(courseId) on delete cascade,
-foreign key (bookISBN) references TEXT(bookISBN) on delete cascade
-);
-
-insert into STUDENT(regno, name, major, bdate)
+insert into PERSON(driver_id, name, address)
 values
-("01JS123", "Karthik", "CSE", "2003-01-04"),
-("01JS234", "John", "ECE", "2003-02-04"),
-("01JS345", "Reba", "ISE", "2003-03-04"),
-("01JS456", "Sathvik", "CSE", "2003-04-04"),
-("01JS567", "Vinay", "EEE", "2003-05-04");
+('D001', 'Smith', 'Kuvempunagar'),
+('D002', 'Alex', 'Vijaynagar'),
+('D003', 'John', 'R K Nagar'),
+('D004', 'Kumar', 'K P Layout'),
+('D005', 'Patil', 'J P Nagar');
 
-insert into COURSE(courseId, cname, dept)
+insert into CAR (reg_no, model, cyear)
 values
-(101, "DBMS", "CSE"),
-(102, "Communication", "ECE"),
-(103, "Operating Systems", "ISE"),
-(104, "Marketing Management", "CTM"),
-(105, "Power Plant", "EEE");
+('KA09FG2435', 'Swift', 2009),
+('KA12TT5667', 'Verna', 2015),
+('KA22RN3548', 'Mazda', 2021),
+('KA27LL9472', 'Kushaq', 2022),
+('KA09MA1234', 'Kia', 2020);
 
-insert into ENROLL(regno, courseId, sem, marks)
+insert into ACCIDENT (report_number, accident_date, location)
 values
-("01JS123", 101, 5 , 96),
-("01JS234", 104, 6, 89),
-("01JS345", 105, 5, 67),
-("01JS456", 102, 6, 39),
-("01JS567", 103, 5, 76);
+(101, '2022-01-12', 'R G layout'),
+(102, '2022-02-12', 'Vijaynagar'),
+(103, '2021-03-12', 'Kuvempnagara'),
+(104, '2023-04-12', 'J P Nagar'),
+(105, '2021-05-12', 'Jaynagar'),
+(106, '2021-07-12', 'R T Nagar');
 
-insert into TEXT(bookISBN, bookTitle, publisher, author)
+insert into OWNS (driver_id , reg_no)
 values
-(258341, "Database Management Systems", "Publications1", "Author1"),
-(561685, "Communications- made easier", "Publications2", "Author2"),
-(631685, "Operating Systems Vol1", "Publications1", "Author3"),
-(421613, "Market Research", "Publications3", "Author4"),
-(153716, "Power Plantations", "Publications4", "Author5"); 
+('D001', 'KA09FG2435'),
+('D002', 'KA12TT5667'),
+('D001', 'KA22RN3548'),
+('D003', 'KA27LL9472'),
+('D005', 'KA09MA1234');
 
-insert into BOOK_ADOPTION(courseId, sem, bookISBN)
+insert into PARTICIPATED (driver_id, reg_no, report_number, damage_amount)
 values
-(101, 5, 258341),
-(104, 6, 421613),
-(105, 5, 153716),
-(102, 6, 561685),
-(103, 5, 631685);
+('D001', 'KA09FG2435', 101, 26000),
+('D002', 'KA12TT5667', 102, 36000),
+('D001', 'KA22RN3548', 103, 46000),
+('D003', 'KA27LL9472', 104, 56000),
+('D005', 'KA09MA1234', 106, 66000);
 
--- Demonstrate how you add a new text book to the database and make this book be adopted by some department
-insert into TEXT 
-values 
-(364712, "Handbook for CSE", "Publications5", "Author6");
+-- Find the total number of people who owned cars that were involved in accidents in 2021
+select count(distinct driver_id) as total
+from PARTICIPATED join
+ACCIDENT on
+PARTICIPATED.report_number = ACCIDENT.report_number
+where accident_date like '2021%';
 
--- adoption of the above book
-insert into BOOK_ADOPTION 
+-- Find the number of accidents in which the cars belonging to “Smith” were involved
+select count(PARTICIPATED.driver_id) as Accidents_by_Smith
+from PARTICIPATED join
+PERSON on PARTICIPATED.driver_id = PERSON.driver_id
+where PERSON.name like '%Smith%';
+
+
+SET SQL_SAFE_UPDATES = 0;
+-- Delete the Mazda belonging to “Smith”.
+delete from CAR where model = 'Mazda'
+and reg_no in
+(select OWNS.reg_no from OWNS join PERSON on
+OWNS.driver_id = PERSON.driver_id
+where PERSON.name like '%Smith%');
+
+select * from CAR;
+
+-- Add a new accident to the database; assume any value for the atributes
+insert into ACCIDENT (report_number, accident_date, location)
 values
-(105, 5, 364712);
+(108, '2020-09-16', 'Bogadi');
 
--- Produce a list of text books (include Course #, Book-ISBN, Book-title) in the alphabetical order for courses offered by the ‘CS’ department that use more than two books
-select COURSE.courseId, TEXT.bookTitle, TEXT.bookISBN
-from BOOK_ADOPTION join TEXT on
-BOOK_ADOPTION.bookISBN = TEXT.bookISBN
-join COURSE on
-COURSE.courseId = BOOK_ADOPTION.courseId
-where COURSE.dept = 'CSE'
-GROUP BY COURSE.courseId, TEXT.bookTitle, TEXT.bookISBN
-having COUNT(*) > 2
-order by TEXT.bookTitle;
+-- Update the damage amount for the car with license number "KA09MA1234" in the accident with an appropriate report number
+update PARTICIPATED
+set damage_amount = 70000
+where reg_no = 'KA09MA1234'
+and report_number = 106;
 
--- List any department that has all its adopted books published by a specific publisher
-select COURSE.dept
-from COURSE , BOOK_ADOPTION , TEXT 
-where BOOK_ADOPTION.bookISBN = TEXT.bookISBN AND BOOK_ADOPTION.courseId = COURSE.courseId and
-TEXT.publisher = 'Publisher1';
+-- A view that shows models and year of cars that are involved in accident
+create view displayModelsYears
+as select CAR.model, CAR.cyear 
+from CAR join PARTICIPATED
+on PARTICIPATED.reg_no = CAR.reg_no;
 
--- List the students who have scored maximum marks in ‘DBMS’ course
-select STUDENT.name 
-from STUDENT join
-ENROLL on STUDENT.regno = ENROLL.regno
-join COURSE on ENROLL.courseId = COURSE.courseId
-where COURSE.cname = "DBMS"
-order by ENROLL.marks desc
-limit 1;
+select * from displayModelsYears;
 
--- Create a view to display all the courses opted by a student along with marks obtained
-create view Display_courses
-as select COURSE.cname, ENROLL.marks
-from COURSE join
-ENROLL on COURSE.courseId = ENROLL.courseId
-where ENROLL.regno = '01JS123';
-
-select * from Display_courses;
-
--- Create a trigger that prevents a student from enrolling in a course if the marks prerequisite is less than 40
+-- A trigger that prevents a driver from participating in more than 2 accidents in a given year
 delimiter //
-create trigger preventEnrollment
-before insert on ENROLL
+create trigger preventParticipation
+before insert on PARTICIPATED
 for each row
 begin
-	if (new.marks < 40) then
-		signal sqlstate '45000' set message_text = "Marks requirement is not satisfied";
+	if (select COUNT(*) from PARTICIPATED where driver_id = new.driver_id) >= 2 then
+		signal sqlstate '45000' set message_text = 'Already 2 accidents crossed';
 	end if;
 end;//
 delimiter ;
 
-insert into ENROLL
+insert into PARTICIPATED 
 values
-("01JS456", 103, 6, 39);
+('D001', 'KA09FG2435', 101, 26000);
+    
